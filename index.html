@@ -48,11 +48,12 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 </style>
 </head><body>
 <canvas id="c" aria-label="Modelo 3D de fundaciones de Casa Baguales"></canvas>
-<div class="chip"><b>Casa Baguales</b><span>Un dedo gira · dos dedos acercan y mueven</span></div>
+<div class="chip"><b>Casa Baguales</b><span>Un dedo gira (también por debajo) · dos dedos acercan y mueven</span></div>
 <div class="views">
   <button id="vTop" type="button">Planta</button>
   <button id="vIso" type="button" aria-pressed="true">3D</button>
   <button id="vSide" type="button">Lateral</button>
+  <button id="vBot" type="button">Abajo</button>
 </div>
 <div id="L1" class="lv">piso +0,90</div><div id="L2" class="lv">piso +0,30</div>
 <div id="sheet"><div class="in">
@@ -77,7 +78,7 @@ const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math
 const S=new THREE.Scene();
 const cam=new THREE.PerspectiveCamera(40,1,0.1,600);
 S.add(new THREE.HemisphereLight(0xffffff,0x888888,0.95));
-const dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(-10,30,20);S.add(dl);
+const dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(-10,30,20);S.add(dl);const dl2=new THREE.DirectionalLight(0xffffff,0.7);dl2.position.set(10,-30,-15);S.add(dl2);
 const cx=DATA.W/2, cz=-DATA.D/2;
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const hex=n=>new THREE.Color(css(n));
@@ -136,15 +137,16 @@ cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);cv
 addEventListener('pointerup',end);addEventListener('pointercancel',end);addEventListener('blur',()=>{P.clear();});
 cv.addEventListener('pointermove',e=>{
   const p=P.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;p.t=e.timeStamp;
-  if(P.size===1){ if(p.s||p.b===2)pan(dx,dy); else{th-=dx*0.006;ph=Math.min(1.55,Math.max(0.02,ph-dy*0.006));} }
+  if(P.size===1){ if(p.s||p.b===2)pan(dx,dy); else{th-=dx*0.006;ph=Math.min(3.12,Math.max(0.02,ph-dy*0.006));} }
   else if(P.size>=2){const a=[...P.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);const c={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
     if(lastD>0){rad=Math.min(220,Math.max(4,rad*lastD/d));} if(lastC){pan(c.x-lastC.x,c.y-lastC.y);} lastD=d;lastC=c;}
   upd();});
 cv.addEventListener('wheel',e=>{e.preventDefault();rad=Math.min(220,Math.max(4,rad*(1+Math.sign(e.deltaY)*0.1)));upd();},{passive:false});
-function view(n,t,p,r){th=t;ph=p;tx=cx;tz=cz;$('ex').value=0;place();fit();if(r)rad*=r;upd();['vTop','vIso','vSide'].forEach(i=>$(i).setAttribute('aria-pressed',String(i===n)));}
+function view(n,t,p,r){th=t;ph=p;tx=cx;tz=cz;$('ex').value=0;place();fit();if(r)rad*=r;upd();['vTop','vIso','vSide','vBot'].forEach(i=>$(i).setAttribute('aria-pressed',String(i===n)));}
 $('vTop').addEventListener('click',()=>view('vTop',0,0.02,1));
 $('vIso').addEventListener('click',()=>view('vIso',-0.6,0.9,1));
 $('vSide').addEventListener('click',()=>view('vSide',0,1.5,0.8));
+$('vBot').addEventListener('click',()=>view('vBot',0,3.12,1));
 window.__dbg=()=>({th,ph,rad,tyy,n:P.size,open:$('head').getAttribute('aria-expanded')});
 const l1=$('L1'),l2=$('L2');
 function lab(el,x,y,z){const v=new THREE.Vector3(x,y,z).project(cam);el.style.left=((v.x+1)/2*innerWidth)+'px';el.style.top=((1-v.y)/2*innerHeight)+'px';el.hidden=!(v.z<1);}
